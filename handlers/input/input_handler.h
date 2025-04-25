@@ -6,6 +6,9 @@
 #include <optional>
 #include <vector>
 #include <algorithm>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 /**
  * @struct StringInputConfig
@@ -34,6 +37,32 @@ struct NumericInputConfig {
     std::string format_hint;        ///< Подсказка по формату ввода
     std::vector<T> allowed_values;  ///< Список допустимых значений
 };
+
+/**
+ * @struct FileInputConfig
+ * @brief Конфигурация для ввода файла
+ */
+struct FileInputConfig {
+    std::string prompt;                          ///< Текст-обращение к пользователю для файла
+    bool check_existence = true;                 ///< проверка на существование файла
+    bool check_extension = false;                ///< Проверка на расширение
+    std::vector<std::string> allowed_extensions; ///< Допустимые расширения
+    std::string error_msg;                       ///< Кастомное сообщение об ошибке
+};
+
+
+
+/**
+ * @struct FileCheckConfig
+ * @brief Конфигурация для проверки файла
+ */
+struct FileCheckConfig {
+    bool check_existence = true;             ///< Проверять существование файла
+    bool check_extension = false;            ///< Проверять расширение файла
+    std::vector<std::string> allowed_extensions; ///< Допустимые расширения файлов
+    std::string error_msg;                   ///< Сообщение об ошибке
+};
+
 
 /**
  * @class InputHandler
@@ -80,9 +109,23 @@ public:
      */
     static bool GetBool(bool* out, const std::string& prompt = "") ;
 
-private:
-    InputHandler() = default;
+    /**
+     * @brief Проверяет валидность файла по указанному пути
+     * @param path Путь к файлу для проверки
+     * @param config Конфигурация проверки
+     * @return true если файл валиден, false в противном случае
+     */
+    static bool ValidateFilePath(const fs::path& path, const FileCheckConfig& config = {});
 
+    /**
+     * @brief Получает путь к файлу с проверкой (интерактивный ввод)
+     * @param out Указатель для сохранения результата
+     * @param config Конфигурация проверки
+     * @return true если ввод корректен, false при ошибке
+     */
+    static bool GetFilePath(fs::path* out, const FileCheckConfig& config = {});
+
+private:
     /**
      * @brief Отображение приглашения для ввода
      * @param prompt Текст приглашения
@@ -95,6 +138,12 @@ private:
      * @return Очищенная строка ввода
      */
     static std::string GetTrimmedInput() ;
+
+    /**
+      * @brief Базовая проверка файла
+      * @return true в случае корректной валидации и false иначе
+      */
+    static bool CheckFileValidity(const fs::path& path, const FileCheckConfig& config);
 };
 
 #endif // INPUT_HANDLER_H

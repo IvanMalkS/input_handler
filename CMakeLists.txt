@@ -7,3 +7,9 @@ add_executable(input_handler main.cpp
         handlers/input/input_handler.cpp
         handlers/input/input_handler.h
 )
+
+configure_file(
+        "${CMAKE_SOURCE_DIR}/config.json"
+        "${CMAKE_BINARY_DIR}/config.json"
+        COPYONLY
+)

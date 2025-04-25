@@ -2,9 +2,6 @@
 #include "handlers/input/input_handler.h"
 
 int main() {
-    setlocale(LC_ALL, "Russian");
-
-
     // Пример 1: Ввод возраста (18-99)
     int age = 18;
     NumericInputConfig<int> age_config;
@@ -56,6 +53,27 @@ int main() {
     bool confirm = false;
     if (InputHandler::GetBool(&confirm, "Are you sure you want to download the file? (y/n): ")) {
         std::cout << "Confirmation: " << (confirm ? "YES" : "NO") << "\n";
+    }
+
+    //Пример 6: Проверка существующего файла (должен находиться в билде !!! ПРОВЕРЯМЕ CMAKE !!!)
+    fs::path config_path =   "config.json";
+
+    FileCheckConfig check_config;
+    check_config.check_existence = true;
+    check_config.check_extension = true;
+    check_config.allowed_extensions = {".json", ".xml"};
+    check_config.error_msg = "File must be json or xml";
+
+    if (InputHandler::ValidateFilePath(config_path, check_config)) {
+        std::cout << "File " << config_path << " is valid!\n";
+    } else {
+        std::cout << "File " << config_path << " is invalid!\n";
+    }
+
+    // Вариант 2: Интерактивный ввод пути
+    fs::path input_path = config_path;
+    if (InputHandler::GetFilePath(&input_path, check_config)) {
+        std::cout << "Chosen file " << input_path << "\n";
     }
 
     return 0;

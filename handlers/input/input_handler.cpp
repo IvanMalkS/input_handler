@@ -2,6 +2,8 @@
 #include <sstream>
 #include <cctype>
 
+namespace fs = std::filesystem;
+
 void InputHandler::ShowPrompt(const std::string& prompt, const std::string& format_hint) {
     if (!format_hint.empty()) {
         std::cout << "Format: " << format_hint << "\n";
@@ -196,5 +198,68 @@ bool InputHandler::GetBool(bool* out, const std::string& prompt) {
         }
 
         std::cerr << "Please enter 'y' or 'n'.\n";
+    }
+}
+
+bool InputHandler::CheckFileValidity(const fs::path& path, const FileCheckConfig& config) {
+    // Проверка существования файла
+    if (config.check_existence && !fs::exists(path)) {
+        std::cerr << (config.error_msg.empty()
+                      ? "File doesn't exist: " + path.string()
+                      : config.error_msg) << "\n";
+        return false;
+    }
+
+    // Проверка расширения файла
+    if (config.check_extension && !config.allowed_extensions.empty()) {
+        std::string ext = path.extension().string();
+        std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+
+        bool valid_extension = false;
+        for (const auto& allowed_ext : config.allowed_extensions) {
+            std::string lower_ext = allowed_ext;
+            std::transform(lower_ext.begin(), lower_ext.end(), lower_ext.begin(), ::tolower);
+            if (ext == lower_ext) {
+                valid_extension = true;
+                break;
+            }
+        }
+
+        if (!valid_extension) {
+            std::cerr << (config.error_msg.empty()
+                          ? "Allowed extensions: "
+                          : config.error_msg);
+            for (const auto& extension : config.allowed_extensions) {
+                std::cerr << extension << " ";
+            }
+            std::cerr << "\n";
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool InputHandler::ValidateFilePath(const fs::path& path, const FileCheckConfig& config) {
+    return CheckFileValidity(path, config);
+}
+
+bool InputHandler::GetFilePath(fs::path* out, const FileCheckConfig& config) {
+    if (out == nullptr) {
+        return false;
+    }
+
+    while (true) {
+        std::cout << "Input file path: ";
+        std::string input;
+        if (!std::getline(std::cin, input)) {
+            return false;
+        }
+
+        fs::path file_path(input);
+        if (CheckFileValidity(file_path, config)) {
+            *out = file_path;
+            return true;
+        }
     }
 }
